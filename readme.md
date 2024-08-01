@@ -1,12 +1,45 @@
-# Demo Video
+# Fireworks Application
+
+## Demo Video
+
+I run through the challenge: 
 
 https://www.loom.com/share/cce3b705f9b24089bb8dea94187a12ed
 
-# Fireworks Application
 
-This application consists of a backend built with FastAPI in Python and a frontend built with Node.js. Follow the instructions below to set up and run the application.
+## Running the Project with Docker
 
-## Backend Setup
+To run the project using Docker, follow these steps:
+
+### Prerequisites
+
+- Ensure you have Docker and Docker Compose installed on your machine.
+
+### Steps
+
+1. Clone the repository:
+
+    ```bash
+    git clone https://github.com/your-username/your-repo.git
+    cd your-repo
+    ```
+
+2. Build and start the Docker containers:
+
+    ```bash
+    docker-compose up --build
+    ```
+
+3. Access the services:
+
+    - The backend will be accessible at `http://localhost:8000`
+    - The frontend will be accessible at `http://localhost:3000`
+
+## Running the Project Locally
+
+If you prefer to run the project locally without Docker, follow these steps:
+
+### Backend Setup
 
 1. **Navigate to the backend directory:**
     ```bash
@@ -40,7 +73,7 @@ This application consists of a backend built with FastAPI in Python and a fronte
 
     The backend server will start on `http://127.0.0.1:8000`.
 
-## Frontend Setup
+### Frontend Setup
 
 1. **Navigate to the frontend directory:**
     ```bash

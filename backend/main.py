@@ -36,10 +36,10 @@ class TestResult(BaseModel):
     current_failures_per_sec: float
     timestamp: float
 
-# Enable CORS (for testing)
+# NOTE: Allow list for CORS simply for running on dev
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["http://localhost:3000"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
