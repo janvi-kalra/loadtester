@@ -94,3 +94,14 @@ th {
 td {
   background-color: #fff;
 }
+
+.download-icon {
+  margin: 20px 0;
+  display: flex;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.download-icon:hover {
+  color: #007bff;
+}
