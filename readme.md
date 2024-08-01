@@ -28,6 +28,7 @@ To run the project using Docker:
 
     - The backend will be accessible at `http://localhost:8000`
     - The frontend will be accessible at `http://localhost:3000`
+    - The backend swagger docs will be accessible at `http://localhost:8000/docs`
   
 I've tested on Docker and it WAI. It should look something like:
 ![Screen Shot 2024-08-01 at 3 48 43 PM](https://github.com/user-attachments/assets/4e58a2a7-67b4-476a-adda-13e7414cf0bf)
