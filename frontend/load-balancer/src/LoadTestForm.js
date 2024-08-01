@@ -66,10 +66,11 @@ function LoadTestForm({ setResults, setIsLoading, isLoading, fetchResults }) {
 
       setIsLoading(false);
       setProgress(0);
+      fetchResults();  // Fetch latest results after stopping the test
     } catch (error) {
       console.error('Error stopping load test:', error);
     }
-  }, [setIsLoading]);
+  }, [setIsLoading, fetchResults]);
 
   return (
     <form onSubmit={handleSubmit}>

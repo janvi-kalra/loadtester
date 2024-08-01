@@ -8,6 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import requests
 from requests.packages.urllib3.util.retry import Retry
 from requests.adapters import HTTPAdapter
+import asyncio
 
 app = FastAPI()
 
@@ -45,7 +46,7 @@ app.add_middleware(
 )
 
 past_tests: List[TestResult] = []
-current_test: Union[TestResult, None] = None
+stop_event = asyncio.Event()
 
 class HTTPLoadTester:
     def __init__(self, url, num_requests, num_concurrent, qps, duration=1):
@@ -81,9 +82,6 @@ class HTTPLoadTester:
             latencies.append(latency)
             sizes.append(len(response.content))
             successful_requests += 1
-        except requests.RequestException as e:
-            print(f"Request error for URL {self.url}: {str(e)}")
-            failed_requests += 1
         except Exception as e:
             print(f"Unexpected error for URL {self.url}: {str(e)}")
             failed_requests += 1
@@ -100,6 +98,8 @@ class HTTPLoadTester:
         with concurrent.futures.ThreadPoolExecutor(max_workers=self.num_concurrent) as executor:
             future_to_request = {executor.submit(self.make_request): i for i in range(self.num_requests)}
             for future in concurrent.futures.as_completed(future_to_request):
+                if stop_event.is_set():
+                    break
                 try:
                     res_latencies, res_sizes, res_successful, res_failed = future.result()
                     latencies.extend(res_latencies)
@@ -155,15 +155,14 @@ async def start_load_test(params: LoadTestParams):
     tester = HTTPLoadTester(url=params.url, num_requests=params.qps * params.duration, num_concurrent=params.qps, qps=params.qps, duration=params.duration)
     result = tester.run()
     past_tests.append(result)
-    global current_test
-    current_test = None
+    stop_event.clear()
     return result
 
 @app.post("/loadtest", response_model=TestResult)
 async def run_load_test(params: LoadTestParams, background_tasks: BackgroundTasks):
-    global current_test
-    if current_test:
+    if stop_event.is_set():
         raise HTTPException(status_code=400, detail="Another test is currently running.")
+    stop_event.clear()
     current_test = TestResult(
         url=params.url,
         qps=params.qps,
@@ -188,11 +187,11 @@ async def run_load_test(params: LoadTestParams, background_tasks: BackgroundTask
 
 @app.post("/stop")
 async def stop_load_test():
-    global current_test
-    if not current_test:
+    if not stop_event.is_set():
+        stop_event.set()
+        return {"message": "Test stopped"}
+    else:
         raise HTTPException(status_code=400, detail="No test is currently running.")
-    current_test = None
-    return {"message": "Test stopped"}
 
 @app.get("/results", response_model=List[TestResult])
 async def get_results():
