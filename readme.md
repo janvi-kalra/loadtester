@@ -9,19 +9,13 @@ https://www.loom.com/share/cce3b705f9b24089bb8dea94187a12ed
 
 ## Running the Project with Docker
 
-To run the project using Docker, follow these steps:
-
-### Prerequisites
-
-- Ensure you have Docker and Docker Compose installed on your machine.
-
-### Steps
+To run the project using Docker:
 
 1. Clone the repository:
 
     ```bash
-    git clone https://github.com/your-username/your-repo.git
-    cd your-repo
+    git clone https://github.com/janvi-kalra/loadtester.git
+    cd loadtester
     ```
 
 2. Build and start the Docker containers:
@@ -34,6 +28,9 @@ To run the project using Docker, follow these steps:
 
     - The backend will be accessible at `http://localhost:8000`
     - The frontend will be accessible at `http://localhost:3000`
+  
+I've tested on Docker and it WAI. It should look something like:
+![Screen Shot 2024-08-01 at 3 48 43 PM](https://github.com/user-attachments/assets/4e58a2a7-67b4-476a-adda-13e7414cf0bf)
 
 ## Running the Project Locally
 
