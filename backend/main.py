@@ -36,7 +36,7 @@ class TestResult(BaseModel):
     current_failures_per_sec: float
     timestamp: float
 
-# Enable CORS
+# Enable CORS (for testing)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -45,7 +45,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-past_tests: List[TestResult] = []
+# In memory for the 24-hour challenge. In real life, would make this a DB.
+past_tests: List[TestResult] = []  
 stop_event = asyncio.Event()
 
 class HTTPLoadTester:
@@ -63,8 +64,10 @@ class HTTPLoadTester:
 
     def create_session(self):
         session = requests.Session()
-        retries = Retry(total=5, backoff_factor=0.5, status_forcelist=[429, 500, 502, 503, 504])
-        adapter = HTTPAdapter(max_retries=retries)
+        # retries = Retry(total=5, backoff_factor=0.5, status_forcelist=[429, 500, 502, 503, 504])
+        # adapter = HTTPAdapter(max_retries=retries)
+        adapter = HTTPAdapter()
+        
         session.mount('http://', adapter)
         session.mount('https://', adapter)
         return session
@@ -110,6 +113,8 @@ class HTTPLoadTester:
                 successful_requests += 1
             else:
                 failed_requests += 1
+
+        self.executor.shutdown(wait=True) # Clean up threads to avoid memory leaks. 
 
         elapsed_time = time.time() - self.start_time
         total_requests = successful_requests + failed_requests

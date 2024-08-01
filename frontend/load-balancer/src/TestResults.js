@@ -22,7 +22,7 @@ function TestResults({ results }) {
               <th>Max (ms)</th>
               <th>Average size (bytes)</th>
               <th>Error Rate (%)</th>
-              <th>Current RPS</th>
+              <th>RPS</th>
               <th>Failures per sec</th>
             </tr>
           </thead>
