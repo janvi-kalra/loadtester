@@ -59,6 +59,7 @@ class HTTPLoadTester:
         self.results = []
         self.errors = []
         self.start_time = None
+        self.executor = concurrent.futures.ThreadPoolExecutor(max_workers=qps)
 
     def create_session(self):
         session = requests.Session()
@@ -80,6 +81,10 @@ class HTTPLoadTester:
             print(f"Unexpected error for URL {self.url}: {str(e)}")
             return 0, 0, False
 
+    def worker(self):
+        latency, size, success = self.make_request()
+        return latency, size, success
+
     async def run(self):
         latencies = []
         sizes = []
@@ -87,20 +92,24 @@ class HTTPLoadTester:
         failed_requests = 0
 
         self.start_time = time.time()
+        futures = []
+
         for _ in range(self.total_requests):
             if stop_event.is_set():
                 break
             start = time.time()
-            latency, size, success = self.make_request()
+            futures.append(self.executor.submit(self.worker))
+            elapsed = time.time() - start
+            await asyncio.sleep(max(0, self.interval - elapsed))
+
+        for future in concurrent.futures.as_completed(futures):
+            latency, size, success = future.result()
             if success:
                 latencies.append(latency)
                 sizes.append(size)
                 successful_requests += 1
             else:
                 failed_requests += 1
-            elapsed = time.time() - start
-            # Ensure the request rate is maintained by waiting for the remainder of the interval
-            await asyncio.sleep(max(0, self.interval - elapsed))
 
         elapsed_time = time.time() - self.start_time
         total_requests = successful_requests + failed_requests
