@@ -10,6 +10,8 @@ function TestResults({ results }) {
             <tr>
               <th>Timestamp</th>
               <th>URL</th>
+              <th>QPS</th>
+              <th>Duration</th>
               <th># Requests</th>
               <th># Fails</th>
               <th>Median (ms)</th>
@@ -29,6 +31,8 @@ function TestResults({ results }) {
               <tr key={index}>
                 <td>{new Date(test.timestamp * 1000).toLocaleString()}</td>
                 <td><a href={test.url} target="_blank" rel="noopener noreferrer">{test.url}</a></td>
+                <td>{test.qps}</td>
+                <td>{test.duration}</td>
                 <td>{test.total_requests}</td>
                 <td>{test.failed_requests}</td>
                 <td>{(test.median_latency * 1000).toFixed(2)}</td>

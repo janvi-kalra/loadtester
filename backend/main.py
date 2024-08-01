@@ -49,13 +49,13 @@ past_tests: List[TestResult] = []
 stop_event = asyncio.Event()
 
 class HTTPLoadTester:
-    def __init__(self, url, num_requests, num_concurrent, qps, duration=1):
+    def __init__(self, url, qps, duration):
         self.url = url
-        self.num_requests = num_requests
-        self.num_concurrent = num_concurrent
         self.qps = qps
         self.duration = duration
-        self.session = self.create_session()  # Use a session object with retry strategy
+        self.total_requests = qps * duration
+        self.interval = 1.0 / qps  # Calculate the interval between requests
+        self.session = self.create_session()
         self.results = []
         self.errors = []
         self.start_time = None
@@ -69,46 +69,38 @@ class HTTPLoadTester:
         return session
 
     def make_request(self):
-        latencies = []
-        sizes = []
-        successful_requests = 0
-        failed_requests = 0
-
         try:
             request_start_time = time.time()
             response = self.session.get(self.url)
             response.raise_for_status()
             latency = time.time() - request_start_time
-            latencies.append(latency)
-            sizes.append(len(response.content))
-            successful_requests += 1
+            size = len(response.content)
+            return latency, size, True
         except Exception as e:
             print(f"Unexpected error for URL {self.url}: {str(e)}")
-            failed_requests += 1
-        
-        return latencies, sizes, successful_requests, failed_requests
+            return 0, 0, False
 
-    def run(self):
+    async def run(self):
         latencies = []
         sizes = []
         successful_requests = 0
         failed_requests = 0
 
         self.start_time = time.time()
-        with concurrent.futures.ThreadPoolExecutor(max_workers=self.num_concurrent) as executor:
-            future_to_request = {executor.submit(self.make_request): i for i in range(self.num_requests)}
-            for future in concurrent.futures.as_completed(future_to_request):
-                if stop_event.is_set():
-                    break
-                try:
-                    res_latencies, res_sizes, res_successful, res_failed = future.result()
-                    latencies.extend(res_latencies)
-                    sizes.extend(res_sizes)
-                    successful_requests += res_successful
-                    failed_requests += res_failed
-                except Exception as exc:
-                    print(f"Error processing request: {str(exc)}")
-                    failed_requests += 1
+        for _ in range(self.total_requests):
+            if stop_event.is_set():
+                break
+            start = time.time()
+            latency, size, success = self.make_request()
+            if success:
+                latencies.append(latency)
+                sizes.append(size)
+                successful_requests += 1
+            else:
+                failed_requests += 1
+            elapsed = time.time() - start
+            # Ensure the request rate is maintained by waiting for the remainder of the interval
+            await asyncio.sleep(max(0, self.interval - elapsed))
 
         elapsed_time = time.time() - self.start_time
         total_requests = successful_requests + failed_requests
@@ -152,8 +144,8 @@ class HTTPLoadTester:
         return result
 
 async def start_load_test(params: LoadTestParams):
-    tester = HTTPLoadTester(url=params.url, num_requests=params.qps * params.duration, num_concurrent=params.qps, qps=params.qps, duration=params.duration)
-    result = tester.run()
+    tester = HTTPLoadTester(url=params.url, qps=params.qps, duration=params.duration)
+    result = await tester.run()
     past_tests.append(result)
     stop_event.clear()
     return result
