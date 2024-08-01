@@ -11,11 +11,11 @@ services:
       - db
 
   frontend:
-    build: ./frontend
+    build: ./frontend/load-balancer
     ports:
       - "3000:80"
     volumes:
-      - ./frontend:/app
+      - ./frontend/load-balancer:/app
     depends_on:
       - backend
 
